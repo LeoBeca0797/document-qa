@@ -59,19 +59,24 @@ else:
                     "Authorization": f"Bearer {gemini_api_key}",
                     "Content-Type": "application/pdf" if file_type == "pdf" else "text/plain",
                 }
+
+                file_data = document_content.encode('utf-8') if isinstance(document_content, str) else document_content
+
                 upload_response = requests.post(
                     upload_url,
                     headers=headers,
-                    data=document_content.encode('utf-8'),
+                    data=file_data,
                     timeout=30
                 )
-                upload_response.raise_for_status()
+                upload_response.raise_for_status()  # Raise error for HTTP failures
+
+                # Extract file URI from the response
                 file_info = upload_response.json()
                 file_uri = file_info.get("file", {}).get("uri")
 
                 if not file_uri:
-                    st.error("Failed to upload the document.")
-                    st.stop
+                    st.error("Failed to upload the document. No URI returned.")
+                    st.stop()
 
                 # Prepare the payload for generating content
                 payload = {
