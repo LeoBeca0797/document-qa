@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+import time  # Add time for retry delay
 import google.generativeai as genai
 
 # Set up Google Gemini API
@@ -40,17 +41,6 @@ else:
                     st.info("Step 1: Uploading the document to the Gemini API...")
                     progress.progress(20)
 
-                    with st.expander("Code for Step 1: Upload Document"):
-                        st.code(f"""
-uploaded_file_obj = genai.upload_file(
-    path="{file_path}",
-    mime_type="{mime_type}",
-    display_name="marcopolo.pdf"
-)
-if uploaded_file_obj.state != "ACTIVE":
-    raise ValueError("File is not ready for processing.")
-""")
-
                     uploaded_file_obj = genai.upload_file(
                         path=file_path,
                         mime_type=mime_type,
@@ -63,27 +53,25 @@ if uploaded_file_obj.state != "ACTIVE":
                             "uploaded_file_obj.uri": uploaded_file_obj.uri
                         })
 
-                    # Check file readiness
+                    # Step 2: Wait for file readiness (retry mechanism)
+                    st.info("Checking if the file is ready for processing...")
+                    retry_count = 0
+                    max_retries = 10  # Set max retries
+                    while uploaded_file_obj.state != "ACTIVE" and retry_count < max_retries:
+                        time.sleep(2)  # Wait for 2 seconds before retrying
+                        uploaded_file_obj = genai.get_file(uploaded_file_obj.uri)  # Re-fetch the file state
+                        retry_count += 1
+
                     if uploaded_file_obj.state != "ACTIVE":
-                        st.error("File is not ready for processing.")
+                        st.error("File is still not ready for processing after multiple retries.")
                         progress.progress(100)
                         st.stop()
 
-                    st.success("Step 1: Document uploaded successfully!")
+                    st.success("Step 1: Document is now ready for processing!")
                     progress.progress(50)
 
-                    # Step 2: Generate content
+                    # Step 3: Generate content
                     st.info("Step 2: Generating content based on the document and your question...")
-
-                    with st.expander("Code for Step 2: Generate Content"):
-                        st.code(f"""
-response = genai.generate_content(
-    model="gemini-1.5-pro",
-    prompt=f"Document URI: {{uploaded_file_obj.uri}}\\n\\nQuestion: {{question}}"
-)
-""")
-
-                    # Use the URI from Step 1
                     response = genai.generate_content(
                         model="gemini-1.5-pro",
                         prompt=f"Document URI: {uploaded_file_obj.uri}\n\nQuestion: {question}"
@@ -95,16 +83,8 @@ response = genai.generate_content(
                     st.success("Step 2: Content generation completed!")
                     progress.progress(80)
 
-                    # Step 3: Display the result
+                    # Step 4: Display the result
                     st.info("Step 3: Displaying the answer...")
-
-                    with st.expander("Code for Step 3: Display Result"):
-                        st.code("""
-answer = response.candidates[0]["output"]
-st.success("Here is the answer:")
-st.write(f"**Answer:** {answer}")
-""")
-
                     answer = response.candidates[0]["output"]
                     st.success("Here is the answer:")
                     st.write(f"**Answer:** {answer}")
