@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import pandas as pd
 import pdfplumber
@@ -34,33 +33,21 @@ else:
     if uploaded_file and question:
         with st.spinner("Processing your request..."):
             try:
-                # Process the uploaded file based on its type
-                file_type = uploaded_file.name.split(".")[-1].lower()
-
-                if file_type in ["txt", "md"]:
-                    document_content = uploaded_file.read().decode()
-                elif file_type == "pdf":
-                    with pdfplumber.open(uploaded_file) as pdf:
-                        document_content = "\n".join(
-                            page.extract_text() for page in pdf.pages if page.extract_text()
-                        )
-                elif file_type == "xlsx":
-                    excel_data = pd.read_excel(uploaded_file)
-                    document_content = excel_data.to_string(index=False)
-                else:
-                    st.error("Unsupported file type.")
-                    document_content = None
-
-                if not document_content:
-                    st.error("Could not process the document. Please try a different file.")
-                    st.stop()
+                # Determine the MIME type based on the file extension
+                file_extension = uploaded_file.name.split(".")[-1].lower()
+                mime_type = {
+                    "pdf": "application/pdf",
+                    "txt": "text/plain",
+                    "md": "text/markdown",
+                    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }.get(file_extension, "application/octet-stream")
 
                 # Upload the file to the Gemini API
-                temp_file_path = f"/tmp/{uploaded_file.name}"
-                with open(temp_file_path, "w", encoding="utf-8") as f:
-                    f.write(document_content)
-
-                uploaded_file_obj = genai.upload_file(file_path=temp_file_path)
+                uploaded_file_obj = genai.upload_file(
+                    path=uploaded_file,
+                    mime_type=mime_type,
+                    display_name=uploaded_file.name
+                )
 
                 if uploaded_file_obj.state != "ACTIVE":
                     st.error("File is not ready for processing.")
