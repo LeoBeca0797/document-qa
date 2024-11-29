@@ -39,6 +39,18 @@ else:
                     # Step 1: Upload the file
                     st.info("Step 1: Uploading the document to the Gemini API...")
                     progress.progress(20)
+
+                    with st.expander("Code for Step 1: Upload Document"):
+                        st.code(f"""
+uploaded_file_obj = genai.upload_file(
+    path="{file_path}",
+    mime_type="{mime_type}",
+    display_name="marcopolo.pdf"
+)
+if uploaded_file_obj.state != "ACTIVE":
+    raise ValueError("File is not ready for processing.")
+""")
+
                     uploaded_file_obj = genai.upload_file(
                         path=file_path,
                         mime_type=mime_type,
@@ -55,6 +67,15 @@ else:
 
                     # Step 2: Generate content
                     st.info("Step 2: Generating content based on the document and your question...")
+
+                    with st.expander("Code for Step 2: Generate Content"):
+                        st.code(f"""
+response = genai.generate_content(
+    model="gemini-1.5-pro",
+    prompt=f"Document URI: {{uploaded_file_obj.uri}}\\n\\nQuestion: {{question}}"
+)
+""")
+
                     response = genai.generate_content(
                         model="gemini-1.5-pro",
                         prompt=f"Document URI: {uploaded_file_obj.uri}\n\nQuestion: {question}"
@@ -65,6 +86,14 @@ else:
 
                     # Step 3: Display the result
                     st.info("Step 3: Displaying the answer...")
+
+                    with st.expander("Code for Step 3: Display Result"):
+                        st.code("""
+answer = response.candidates[0]["output"]
+st.success("Here is the answer:")
+st.write(f"**Answer:** {answer}")
+""")
+
                     answer = response.candidates[0]["output"]
                     st.success("Here is the answer:")
                     st.write(f"**Answer:** {answer}")
