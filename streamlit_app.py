@@ -1,12 +1,11 @@
 import streamlit as st
-import pandas as pd
-import pdfplumber
 import google.generativeai as genai
 
 # Set up Google Gemini API
 st.title("📄 Document Question Answering")
 st.write(
-    "Upload a document below and ask a question about it – Gemini will answer! "
+    "This app references a pre-existing document located at `/Document/marcopolo.pdf` "
+    "and allows you to ask questions about it. "
     "You need to provide a Gemini API key."
 )
 
@@ -18,35 +17,24 @@ else:
     # Configure the Gemini API client
     genai.configure(api_key=gemini_api_key)
 
-    # Let the user upload a file
-    uploaded_file = st.file_uploader(
-        "Upload a document (.txt, .md, .pdf, .xlsx)", type=("txt", "md", "pdf", "xlsx")
-    )
+    # Pre-defined file path and MIME type
+    file_path = "/Document/marcopolo.pdf"
+    mime_type = "application/pdf"
 
     # Ask the user for a question
     question = st.text_area(
         "Now ask a question about the document!",
         placeholder="Can you summarize this document?",
-        disabled=not uploaded_file,
     )
 
-    if uploaded_file and question:
+    if question:
         with st.spinner("Processing your request..."):
             try:
-                # Determine the MIME type based on the file extension
-                file_extension = uploaded_file.name.split(".")[-1].lower()
-                mime_type = {
-                    "pdf": "application/pdf",
-                    "txt": "text/plain",
-                    "md": "text/markdown",
-                    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                }.get(file_extension, "application/octet-stream")
-
-                # Upload the file to the Gemini API
+                # Upload the pre-defined file to the Gemini API
                 uploaded_file_obj = genai.upload_file(
-                    path=uploaded_file,
+                    path=file_path,
                     mime_type=mime_type,
-                    display_name=uploaded_file.name
+                    display_name="marcopolo.pdf"
                 )
 
                 if uploaded_file_obj.state != "ACTIVE":
