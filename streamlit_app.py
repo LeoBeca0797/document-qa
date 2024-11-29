@@ -18,7 +18,7 @@ else:
     genai.configure(api_key=gemini_api_key)
 
     # Pre-defined file path and MIME type
-    file_path = "/Document/marcopolo.pdf"
+    file_path = "./Document/marcopolo.pdf"
     mime_type = "application/pdf"
 
     # Ask the user for a question
