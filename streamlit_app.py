@@ -51,7 +51,7 @@ else:
 
                 if not document_content:
                     st.error("The document could not be processed. Please try a different file.")
-                    return
+                    st.stop()
 
                 # Upload the document to Gemini API
                 upload_url = "https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=media"
