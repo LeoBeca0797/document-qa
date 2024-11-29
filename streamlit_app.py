@@ -57,6 +57,12 @@ if uploaded_file_obj.state != "ACTIVE":
                         display_name="marcopolo.pdf"
                     )
 
+                    with st.expander("Output of Step 1: Upload Document"):
+                        st.json({
+                            "uploaded_file_obj.state": uploaded_file_obj.state,
+                            "uploaded_file_obj.uri": uploaded_file_obj.uri
+                        })
+
                     if uploaded_file_obj.state != "ACTIVE":
                         st.error("File is not ready for processing.")
                         progress.progress(100)
@@ -81,6 +87,9 @@ response = genai.generate_content(
                         prompt=f"Document URI: {uploaded_file_obj.uri}\n\nQuestion: {question}"
                     )
 
+                    with st.expander("Output of Step 2: Generate Content"):
+                        st.json(response)
+
                     st.success("Step 2: Content generation completed!")
                     progress.progress(80)
 
@@ -97,6 +106,10 @@ st.write(f"**Answer:** {answer}")
                     answer = response.candidates[0]["output"]
                     st.success("Here is the answer:")
                     st.write(f"**Answer:** {answer}")
+
+                    with st.expander("Output of Step 3: Display Result"):
+                        st.text(answer)
+
                     progress.progress(100)
 
                 except Exception as e:
