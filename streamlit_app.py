@@ -63,6 +63,7 @@ if uploaded_file_obj.state != "ACTIVE":
                             "uploaded_file_obj.uri": uploaded_file_obj.uri
                         })
 
+                    # Check file readiness
                     if uploaded_file_obj.state != "ACTIVE":
                         st.error("File is not ready for processing.")
                         progress.progress(100)
@@ -82,6 +83,7 @@ response = genai.generate_content(
 )
 """)
 
+                    # Use the URI from Step 1
                     response = genai.generate_content(
                         model="gemini-1.5-pro",
                         prompt=f"Document URI: {uploaded_file_obj.uri}\n\nQuestion: {question}"
