@@ -1,23 +1,20 @@
 import streamlit as st
-from openai import OpenAI
+import requests
 
 # Show title and description.
 st.title("📄 Document question answering")
 st.write(
-    "Upload a document below and ask a question about it – GPT will answer! "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
+    "Upload a document below and ask a question about it – Gemini will answer! "
+    "To use this app, you need to provide a Gemini API key. "
 )
 
-# Ask user for their OpenAI API key via `st.text_input`.
+# Ask user for their Gemini API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
+gemini_api_key = st.text_input("Gemini API Key", type="password")
+if not gemini_api_key:
+    st.info("Please add your Gemini API key to continue.", icon="🗝️")
 else:
-
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
 
     # Let the user upload a file via `st.file_uploader`.
     uploaded_file = st.file_uploader(
@@ -32,22 +29,26 @@ else:
     )
 
     if uploaded_file and question:
-
         # Process the uploaded file and question.
         document = uploaded_file.read().decode()
-        messages = [
-            {
-                "role": "user",
-                "content": f"Here's a document: {document} \n\n---\n\n {question}",
-            }
-        ]
+        query = {
+            "document": document,
+            "question": question
+        }
 
-        # Generate an answer using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            stream=True,
-        )
+        # API endpoint for Gemini's question answering model
+        gemini_api_url = "https://api.gemini.ai/v1/question-answering"
 
-        # Stream the response to the app using `st.write_stream`.
-        st.write_stream(stream)
+        # Send the request to Gemini's API
+        headers = {
+            "Authorization": f"Bearer {gemini_api_key}",
+            "Content-Type": "application/json",
+        }
+        response = requests.post(gemini_api_url, json=query, headers=headers)
+
+        # Check the response status and handle the output
+        if response.status_code == 200:
+            answer = response.json().get("answer", "No answer found.")
+            st.write(f"**Answer:** {answer}")
+        else:
+            st.error(f"Error {response.status_code}: {response.text}")
