@@ -71,7 +71,7 @@ else:
 
                 if not file_uri:
                     st.error("Failed to upload the document.")
-                    return
+                    st.stop
 
                 # Prepare the payload for generating content
                 payload = {
